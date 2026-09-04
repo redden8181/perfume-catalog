@@ -1,0 +1,32 @@
+# Зависимости
+/node_modules
+
+# Сборка Next.js
+/.next/
+/out/
+
+# Продакшн
+/build
+
+# Кэши и служебные файлы
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+.turbo
+
+# Локальные переменные окружения
+.env
+.env*.local
+
+# ОС
+.DS_Store
+Thumbs.db
+
+# Логи
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Редакторы
+.idea
+.vscode
