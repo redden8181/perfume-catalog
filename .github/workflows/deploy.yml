@@ -1,23 +1,28 @@
-name: Deploy to GitHub Pages
+name: Deploy
 
-# Схема: push в main → сборка статики → публикация на GitHub Pages.
+# Каждый push в main/master:
+#   собрать сайт → опубликовать в ветку gh-pages → сайт обновлён.
+#
+# Работает с настройками GitHub Pages «из коробки» (Deploy from a branch).
+# Workflow дополнительно пытается включить Pages сам через API.
+# Единственное требование — публичный репозиторий (на бесплатном тарифе).
+
 on:
   push:
     branches: [main, master]
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write # публикация в ветку gh-pages
+  pages: write    # авто-включение Pages через API
 
 concurrency:
   group: pages
   cancel-in-progress: true
 
 jobs:
-  build:
-    name: Сборка
+  build-deploy:
+    name: Сборка и публикация
     runs-on: ubuntu-latest
     steps:
       - name: Клонировать репозиторий
@@ -29,8 +34,7 @@ jobs:
           node-version: 20
           cache: npm
 
-      # GitHub Pages отдаёт сайт из /repo-name, если это не user.github.io —
-      # вычисляем basePath автоматически из имени репозитория.
+      # GitHub Pages раздаёт сайт из /<имя-репозитория> — считаем base path.
       - name: Вычислить base path
         id: basepath
         run: |
@@ -50,22 +54,40 @@ jobs:
           STATIC_EXPORT: "true"
           NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.base_path }}
 
-      - name: Подготовить артефакт Pages
-        run: touch out/.nojekyll
-
-      - name: Загрузить артефакт
-        uses: actions/upload-pages-artifact@v3
+      # Классический надёжный деплой: содержимое out/ кладём в ветку gh-pages.
+      # Action сам добавляет .nojekyll.
+      - name: Опубликовать в ветку gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          path: ./out
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./out
+          publish_branch: gh-pages
+          force_orphan: true
+          user_name: "github-actions[bot]"
+          user_email: "github-actions[bot]@users.noreply.github.com"
+          commit_message: "deploy: ${{ github.sha }}"
 
-  deploy:
-    name: Публикация
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Опубликовать на GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      # Включаем Pages сами, если ещё не включён. Если репозиторий приватный
+      # на бесплатном тарифе — выведем подсказку.
+      - name: Включить GitHub Pages (если ещё не включён)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/pages" -X POST \
+            -f "source[branch]=gh-pages" -f "source[path]=/" --silent \
+          || gh api "repos/${GITHUB_REPOSITORY}/pages" -X PUT \
+            -f "source[branch]=gh-pages" -f "source[path]=/" --silent \
+          || echo "::notice::Включите Pages вручную: Settings → Pages → Deploy from a branch → ветка gh-pages → Save"
+
+      - name: Показать адрес сайта
+        run: |
+          REPO="${GITHUB_REPOSITORY#*/}"
+          OWNER="${GITHUB_REPOSITORY%/*}"
+          if [[ "$REPO" == *.github.io ]]; then
+            URL="https://${REPO}/"
+          else
+            URL="https://${OWNER}.github.io/${REPO}/"
+          fi
+          echo "## Ваш сайт" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "$URL" >> "$GITHUB_STEP_SUMMARY"
