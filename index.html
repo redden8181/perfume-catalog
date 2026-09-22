@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Ароматека — мой каталог парфюмов</title>
+    <meta
+      name="description"
+      content="Личный каталог парфюмерии: находите ароматы по нотам, ведите заметки и рейтинги. Работает офлайн."
+    />
+
+    <!-- PWA: общие -->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <meta name="theme-color" content="#f5f1e8" />
+    <link rel="icon" href="favicon.png" type="image/png" />
+
+    <!-- PWA: iOS -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Ароматека" />
+    <link rel="apple-touch-icon" href="favicon.png" />
+
+    <!-- Применяем сохранённую тему до первой отрисовки — без вспышки -->
+    <!-- По умолчанию — светлая тема -->
+    <script>
+      try {
+        if (localStorage.getItem("aromateka.theme") === "dark") {
+          document.documentElement.dataset.theme = "dark";
+          document
+            .querySelector('meta[name="theme-color"]')
+            .setAttribute("content", "#0b0a08");
+        } else {
+          document.documentElement.dataset.theme = "light";
+        }
+      } catch (e) {
+        document.documentElement.dataset.theme = "light";
+      }
+    </script>
+    <!-- Фон до загрузки стилей -->
+    <style>
+      html {
+        background-color: #f5f1e8;
+      }
+      html[data-theme="dark"] {
+        background-color: #0b0a08;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

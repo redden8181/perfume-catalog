@@ -1,0 +1,115 @@
+@import "tailwindcss";
+
+/*
+ * Дизайн-токены.
+ * Светлая тема — значения по умолчанию в @theme.
+ * Тёмная тема — переопределение переменных через [data-theme="dark"] на <html>.
+ * Все компоненты используют только семантические токены, поэтому
+ * переключение темы не требует изменений в разметке.
+ */
+@theme {
+  /* ===== Светлая тема (по умолчанию) ===== */
+  --color-ink: #f5f1e8;
+  --color-coal: #fbf8f1;
+  --color-card: #ffffff;
+  --color-lift: #eee8db;
+  --color-gold: #a37c3c;
+  --color-goldsoft: #77592a;
+  --color-cream: #262013;
+  --color-muted: #7e7260;
+  --color-danger: #c9403d;
+  --color-ongold: #ffffff;
+  --color-line: rgba(38, 32, 19, 0.1);
+  --color-line-strong: rgba(38, 32, 19, 0.2);
+  --color-faint: rgba(38, 32, 19, 0.05);
+  --color-faint-strong: rgba(38, 32, 19, 0.12);
+
+  --font-display: "New York", ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+}
+
+/* ============ Тёмная тема ============ */
+:root[data-theme="dark"] {
+  --color-ink: #0b0a08;
+  --color-coal: #14110d;
+  --color-card: #1a1712;
+  --color-lift: #241f18;
+  --color-gold: #c9a45c;
+  --color-goldsoft: #e7cfa3;
+  --color-cream: #f2ebdd;
+  --color-muted: #a29885;
+  --color-danger: #e0605e;
+  --color-ongold: #171208;
+  --color-line: rgba(255, 255, 255, 0.08);
+  --color-line-strong: rgba(255, 255, 255, 0.18);
+  --color-faint: rgba(255, 255, 255, 0.05);
+  --color-faint-strong: rgba(255, 255, 255, 0.12);
+}
+
+/* ============ Атмосферный фон ============ */
+:root {
+  --glow-1: rgba(163, 124, 60, 0.13);
+  --glow-2: rgba(140, 100, 55, 0.08);
+}
+:root[data-theme="dark"] {
+  --glow-1: rgba(201, 164, 92, 0.1);
+  --glow-2: rgba(120, 80, 40, 0.07);
+}
+
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% -10%, var(--glow-1), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 80% 110%, var(--glow-2), transparent 70%),
+    var(--color-ink);
+  transition: background 0.3s ease;
+}
+
+html {
+  background-color: var(--color-ink);
+}
+
+body {
+  @apply bg-ink font-sans text-cream antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* iOS: поля ввода мельче 16px вызывают авто-зум — запрещаем */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+::selection {
+  background: rgba(163, 124, 60, 0.35);
+}
+
+*:focus-visible {
+  outline: 2px solid rgba(163, 124, 60, 0.5);
+  outline-offset: 2px;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
+}

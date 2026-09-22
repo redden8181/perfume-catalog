@@ -1,0 +1,26 @@
+{
+  "name": "Ароматека — мой каталог парфюмов",
+  "short_name": "Ароматека",
+  "description": "Личный каталог парфюмерии: находите ароматы по нотам, ведите заметки и рейтинги.",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f1e8",
+  "theme_color": "#f5f1e8",
+  "icons": [
+    {
+      "src": "favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "favicon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
