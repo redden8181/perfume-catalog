@@ -107,19 +107,26 @@ export class CatalogStore {
     if (!clean) return null;
     const existing = this.findNoteByName(clean);
     if (existing) return existing;
-    const note: Note = { id: uid(), name: displayNoteName(clean), createdAt: Date.now() };
+    const note: Note = { id: uid(), name: displayNoteName(clean), image: null, preference: "neutral", createdAt: Date.now() };
     const notes = [...this.state.notes, note].sort((a, b) => a.name.localeCompare(b.name, "ru"));
     this.commit({ ...this.state, notes });
     return note;
   }
 
-  /** Переименовать ноту (имя обновится во всех парфюмах автоматически) */
-  renameNote(id: string, name: string): void {
-    const clean = normalizeNoteName(name);
-    if (!clean) return;
-    const notes = this.state.notes
-      .map((n) => (n.id === id ? { ...n, name: displayNoteName(clean) } : n))
-      .sort((a, b) => a.name.localeCompare(b.name, "ru"));
+  /** Обновить данные ноты */
+  updateNote(id: string, patch: Partial<Omit<Note, "id" | "createdAt">>): void {
+    const notes = this.state.notes.map((n) => {
+      if (n.id !== id) return n;
+      const updated = { ...n, ...patch };
+      if (patch.name) {
+        const clean = normalizeNoteName(patch.name);
+        if (clean) updated.name = displayNoteName(clean);
+      }
+      return updated;
+    });
+    if (patch.name) {
+      notes.sort((a, b) => a.name.localeCompare(b.name, "ru"));
+    }
     this.commit({ ...this.state, notes });
   }
 
@@ -306,6 +313,8 @@ function sanitizeImport(data: unknown): CatalogSnapshot {
       return {
         id: asStr(rec.id) || uid(),
         name,
+        image: typeof rec.image === "string" && rec.image ? rec.image : null,
+        preference: ["like", "dislike", "neutral"].includes(rec.preference as string) ? (rec.preference as Note["preference"]) : "neutral",
         createdAt: typeof rec.createdAt === "number" ? rec.createdAt : Date.now(),
       };
     })

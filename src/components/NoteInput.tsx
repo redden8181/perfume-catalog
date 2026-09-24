@@ -68,6 +68,8 @@ export function NoteInput({
                 <Chip
                   key={id}
                   label={note.name}
+                  image={note.image}
+                  variant={note.preference}
                   onRemove={() => onChange(value.filter((x) => x !== id))}
                 />
               );

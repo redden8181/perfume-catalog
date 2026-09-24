@@ -6,6 +6,7 @@ import { HomePage } from "./pages/HomePage";
 import { FavoritesPage } from "./pages/FavoritesPage";
 import { PerfumeDetailPage } from "./pages/PerfumeDetailPage";
 import { PerfumeFormPage } from "./pages/PerfumeFormPage";
+import { NotesPage } from "./pages/NotesPage";
 import { SettingsPage } from "./pages/SettingsPage";
 
 /**
@@ -22,6 +23,7 @@ export default function App() {
               <Route index element={<HomePage />} />
               <Route path="favorites" element={<FavoritesPage />} />
               <Route path="add" element={<PerfumeFormPage />} />
+              <Route path="notes" element={<NotesPage />} />
               <Route path="edit/:id" element={<PerfumeFormPage />} />
               <Route path="perfume/:id" element={<PerfumeDetailPage />} />
               <Route path="settings" element={<SettingsPage />} />

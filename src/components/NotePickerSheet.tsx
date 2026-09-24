@@ -72,21 +72,29 @@ export function NotePickerSheet({
         {filtered.map((n) => {
           const active = selected.includes(n.id);
           const count = usage.get(n.id) ?? 0;
+          let nameColor = active ? "text-goldsoft font-semibold" : "text-cream";
+          if (n.preference === "like") nameColor = "text-like-text font-semibold";
+          if (n.preference === "dislike") nameColor = "text-dislike-text font-semibold";
+
           return (
             <button
               key={n.id}
               onClick={() => onToggle(n.id)}
               className={cn(
-                "flex min-h-[52px] items-center justify-between gap-3 border-b border-faint py-2 text-left transition active:bg-faint",
-                active && "text-goldsoft"
+                "flex min-h-[60px] items-center justify-between gap-3 border-b border-faint py-2 text-left transition active:bg-faint"
               )}
             >
-              <span className="flex-1">
-                <span className={cn("block text-[15px]", active ? "text-goldsoft" : "text-cream")}>
-                  {n.name}
-                </span>
-                <span className="block text-[11px] text-muted">
-                  {count > 0 ? `${count} ${plural(count, "аромат", "аромата", "ароматов")}` : "не используется"}
+              <span className="flex flex-1 items-center gap-3">
+                {n.image && (
+                  <img src={n.image} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover border border-line shadow-sm" />
+                )}
+                <span className="flex-1 overflow-hidden">
+                  <span className={cn("block text-[15px]", nameColor)}>
+                    {n.name}
+                  </span>
+                  <span className="block text-[11px] text-muted">
+                    {count > 0 ? `${count} ${plural(count, "аромат", "аромата", "ароматов")}` : "не используется"}
+                  </span>
                 </span>
               </span>
               <span

@@ -97,7 +97,7 @@ export function CatalogBrowser({
           Выбрать ноту
         </button>
         {selectedNotes.map((n) => (
-          <Chip key={n.id} label={n.name} onRemove={() => removeNote(n.id)} />
+          <Chip key={n.id} label={n.name} image={n.image} variant={n.preference} onRemove={() => removeNote(n.id)} />
         ))}
         {selectedNotes.length > 1 && (
           <button

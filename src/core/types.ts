@@ -7,10 +7,16 @@ export type Gender = "male" | "female" | "unisex";
 
 export type NoteLayer = "top" | "heart" | "base";
 
+export type NotePreference = "like" | "dislike" | "neutral";
+
 /** Парфюмерная нота — единая сущность базы (Малина ≠ малина, но совпадает по ключу) */
 export interface Note {
   id: string;
   name: string;
+  /** Миниатюра ноты (dataURL) */
+  image: string | null;
+  /** Отношение к ноте */
+  preference: NotePreference;
   createdAt: number;
 }
 

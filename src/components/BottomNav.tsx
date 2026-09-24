@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Heart, LibraryBig, Plus, Settings2 } from "lucide-react";
+import { Heart, Leaf, LibraryBig, Plus, Settings2 } from "lucide-react";
 import { cn } from "../utils/cn";
 
 const itemClass = ({ isActive }: { isActive: boolean }) =>
@@ -23,13 +23,17 @@ export function BottomNav() {
           <Heart size={22} strokeWidth={1.8} />
           Избранное
         </NavLink>
-        <div className="flex flex-1 justify-center">
+        <NavLink to="/notes" className={itemClass}>
+          <Leaf size={22} strokeWidth={1.8} />
+          Ноты
+        </NavLink>
+        <div className="flex flex-1 justify-center relative -top-3 mx-1 max-w-[64px]">
           <NavLink
             to="/add"
             aria-label="Добавить парфюм"
             className={({ isActive }) =>
               cn(
-                "-mt-6 grid h-14 w-14 place-items-center rounded-full border-4 border-ink text-ongold shadow-[0_10px_30px_rgba(163,124,60,0.4)] transition active:scale-95",
+                "absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 grid h-14 w-14 place-items-center rounded-full border-4 border-ink text-ongold shadow-[0_10px_30px_rgba(163,124,60,0.4)] transition active:scale-95",
                 isActive ? "bg-goldsoft" : "bg-gold"
               )
             }

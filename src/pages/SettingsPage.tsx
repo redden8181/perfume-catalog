@@ -2,16 +2,14 @@ import { useRef, useState, type ReactNode } from "react";
 import {
   Copy,
   Download,
-  Eraser,
   FileJson,
   Info,
   Moon,
   Palette,
-  RotateCcw,
+  ScrollText,
   Smartphone,
   Sparkles,
   Sun,
-  Trash2,
   Upload,
 } from "lucide-react";
 import { catalog } from "../core/catalogStore";
@@ -19,14 +17,7 @@ import { useBrands, useCatalog } from "../hooks/useCatalog";
 import { useTheme, type Theme } from "../state/ThemeContext";
 import { plural } from "../core/utils";
 import { copyToClipboard, exportTextFile, readFileAsText } from "../utils/download";
-import {
-  ConfirmSheet,
-  DangerButton,
-  FieldLabel,
-  GhostButton,
-  Segmented,
-  toast,
-} from "../components/ui";
+import { FieldLabel, GhostButton, Segmented, Sheet, toast } from "../components/ui";
 import { cn } from "../utils/cn";
 
 function Section({
@@ -57,8 +48,7 @@ export function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const fileRef = useRef<HTMLInputElement>(null);
   const [importMode, setImportMode] = useState<"replace" | "merge">("merge");
-  const [confirmReset, setConfirmReset] = useState(false);
-  const [confirmClear, setConfirmClear] = useState(false);
+  const [changelogOpen, setChangelogOpen] = useState(false);
 
   const sizeKb = Math.max(1, Math.round(catalog.dataSize() / 1024));
 
@@ -189,33 +179,6 @@ export function SettingsPage() {
           </div>
         </Section>
 
-        {/* Данные */}
-        <Section icon={<RotateCcw size={16} />} title="Данные">
-          <div className="flex flex-col gap-3">
-            <GhostButton
-              onClick={() => {
-                const removed = catalog.pruneUnusedNotes();
-                toast(
-                  removed > 0
-                    ? `Удалено неиспользуемых нот: ${removed}`
-                    : "Все ноты используются"
-                );
-              }}
-            >
-              <Eraser size={16} />
-              Удалить неиспользуемые ноты
-            </GhostButton>
-            <GhostButton onClick={() => setConfirmReset(true)}>
-              <RotateCcw size={16} />
-              Сбросить к демо-данным
-            </GhostButton>
-            <DangerButton onClick={() => setConfirmClear(true)}>
-              <Trash2 size={16} />
-              Удалить все данные
-            </DangerButton>
-          </div>
-        </Section>
-
         {/* О приложении */}
         <Section icon={<Info size={16} />} title="О приложении">
           <div className="flex flex-col gap-3 text-[13px] leading-relaxed text-muted">
@@ -226,33 +189,44 @@ export function SettingsPage() {
                 Приложение будет работать офлайн и обновляться автоматически.
               </p>
             </div>
-            <p>Ароматека · версия 1.1.0 · личный каталог парфюмерии</p>
+            <p>Ароматека · версия 1.2.0 · личный каталог парфюмерии</p>
+            <GhostButton onClick={() => setChangelogOpen(true)} className="mt-2 h-11 border-line bg-card">
+              <ScrollText size={16} />
+              История версий
+            </GhostButton>
           </div>
         </Section>
       </div>
 
-      <ConfirmSheet
-        open={confirmReset}
-        onClose={() => setConfirmReset(false)}
-        onConfirm={() => {
-          catalog.resetToSeed();
-          toast("Загружены демо-данные");
-        }}
-        title="Сбросить к демо?"
-        text="Текущий каталог будет заменён демонстрационными данными. Экспортируйте JSON заранее, если хотите сохранить свои данные."
-        confirmLabel="Сбросить"
-      />
-      <ConfirmSheet
-        open={confirmClear}
-        onClose={() => setConfirmClear(false)}
-        onConfirm={() => {
-          catalog.clearAll();
-          toast("Все данные удалены");
-        }}
-        title="Удалить всё?"
-        text="Будут удалены все парфюмы, ноты и заметки без возможности восстановления. Экспортируйте JSON заранее."
-        confirmLabel="Удалить всё"
-      />
+      <Sheet open={changelogOpen} onClose={() => setChangelogOpen(false)} title="История версий">
+        <div className="flex flex-col gap-6 pt-2 pb-6 px-1">
+          <div>
+            <h3 className="text-[16px] font-semibold text-goldsoft">Версия 1.2.0</h3>
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-[13px] leading-relaxed text-cream/85">
+              <li>Добавлен раздел «Ноты» с миниатюрами и поиском.</li>
+              <li>Оценка нот (Нравится / Не нравится) с цветовым выделением везде в приложении.</li>
+              <li>Увеличены миниатюры нот в карточках ароматов для удобства.</li>
+              <li>Удалены кнопки полного сброса базы данных для безопасности.</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-[16px] font-semibold text-goldsoft">Версия 1.1.0</h3>
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-[13px] leading-relaxed text-cream/85">
+              <li>Добавлена светлая тема (установлена по умолчанию).</li>
+              <li>Добавлен раздел «Оформление» в настройках.</li>
+              <li>Обновлена иконка приложения.</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-[16px] font-semibold text-goldsoft">Версия 1.0.0</h3>
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-[13px] leading-relaxed text-cream/85">
+              <li>Первый релиз: личный офлайн-каталог парфюмерии.</li>
+              <li>Поиск и продвинутая фильтрация ароматов по нотам.</li>
+              <li>Резервное копирование и экспорт базы в JSON.</li>
+            </ul>
+          </div>
+        </div>
+      </Sheet>
     </div>
   );
 }

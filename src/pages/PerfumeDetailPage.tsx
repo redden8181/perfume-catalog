@@ -14,7 +14,41 @@ import { catalog } from "../core/catalogStore";
 import { useCatalog, useNotesMap } from "../hooks/useCatalog";
 import { useFilters } from "../state/FilterContext";
 import { GENDER_LABELS, LAYER_LABELS, LAYER_ORDER } from "../core/types";
-import { Chip, ConfirmSheet, DangerButton, FieldLabel, GhostButton, StarRating } from "../components/ui";
+import { Leaf } from "lucide-react";
+import type { Note } from "../core/types";
+import { ConfirmSheet, DangerButton, FieldLabel, GhostButton, StarRating } from "../components/ui";
+
+function DetailNotePill({ note, onClick }: { note: Note; onClick: () => void }) {
+  let colors = "border-line bg-card text-cream";
+  if (note.preference === "like") {
+    colors = "border-like-border bg-like-bg/30 text-like-text font-medium";
+  } else if (note.preference === "dislike") {
+    colors = "border-dislike-border bg-dislike-bg/30 text-dislike-text font-medium";
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-3 rounded-full border py-1.5 pl-1.5 pr-4 transition active:scale-95",
+        colors
+      )}
+    >
+      {note.image ? (
+        <img
+          src={note.image}
+          alt=""
+          className="h-10 w-10 shrink-0 rounded-full border border-line object-cover shadow-sm"
+        />
+      ) : (
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-faint-strong text-muted">
+          <Leaf size={18} strokeWidth={1.5} />
+        </div>
+      )}
+      <span className="text-[14px] leading-none">{note.name}</span>
+    </button>
+  );
+}
 import { cn } from "../utils/cn";
 
 export function PerfumeDetailPage() {
@@ -158,19 +192,19 @@ export function PerfumeDetailPage() {
       </div>
 
       {/* Ноты */}
-      <div className="mt-7 flex flex-col gap-4">
+      <div className="mt-7 flex flex-col gap-5">
         {LAYER_ORDER.map((layer) => {
           const ids = perfume.notes[layer];
           if (ids.length === 0) return null;
           return (
             <section key={layer}>
               <FieldLabel>{LAYER_LABELS[layer]}</FieldLabel>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2.5">
                 {ids.map((nid) => {
                   const note = notesMap.get(nid);
                   if (!note) return null;
                   return (
-                    <Chip key={nid} label={note.name} onClick={() => handleNoteClick(nid)} />
+                    <DetailNotePill key={nid} note={note} onClick={() => handleNoteClick(nid)} />
                   );
                 })}
               </div>

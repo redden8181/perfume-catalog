@@ -166,6 +166,8 @@ export function buildSeed(): CatalogSnapshot {
   const notes: Note[] = NOTE_NAMES.map((name, i) => ({
     id: `n-${i + 1}`,
     name,
+    image: null,
+    preference: "neutral",
     createdAt: now - 1000 * (NOTE_NAMES.length - i),
   }));
   const byName = new Map(notes.map((n) => [n.name, n.id]));

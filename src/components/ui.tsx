@@ -273,26 +273,58 @@ export function Chip({
   onClick,
   onRemove,
   className,
+  image,
+  variant = "neutral",
 }: {
   label: string;
   selected?: boolean;
   onClick?: () => void;
   onRemove?: () => void;
   className?: string;
+  image?: string | null;
+  variant?: "neutral" | "like" | "dislike";
 }) {
+  const isLike = variant === "like";
+  const isDislike = variant === "dislike";
+
+  let colors = selected
+    ? "border-gold/50 bg-gold/15 text-goldsoft"
+    : "border-line bg-faint text-cream/80";
+  
+  if (isLike) {
+    colors = selected
+      ? "border-like-border bg-like-bg text-like-text font-semibold"
+      : "border-like-border/60 bg-like-bg/30 text-like-text/90";
+  } else if (isDislike) {
+    colors = selected
+      ? "border-dislike-border bg-dislike-bg text-dislike-text font-semibold"
+      : "border-dislike-border/60 bg-dislike-bg/30 text-dislike-text/90";
+  }
+
+  const imgEl = image ? (
+    <img src={image} alt="" className="h-6 w-6 rounded-full object-cover -ml-2 mr-1.5 opacity-90 border border-line" />
+  ) : null;
+
   if (onRemove) {
+    let removeBtnColors = "text-goldsoft/80 active:bg-gold/20";
+    if (isLike) removeBtnColors = "text-like-text/80 active:bg-like-border";
+    if (isDislike) removeBtnColors = "text-dislike-text/80 active:bg-dislike-border";
+
     return (
       <span
         className={cn(
-          "inline-flex h-9 items-center gap-1 rounded-full border border-gold/35 bg-gold/12 pl-3.5 pr-1 text-[13px] font-medium text-goldsoft",
+          "inline-flex h-9 items-center gap-1 rounded-full border pl-3.5 pr-1 text-[13px] font-medium",
+          colors,
+          image && "pl-2.5",
           className
         )}
       >
+        {imgEl}
         {label}
         <button
           onClick={onRemove}
           aria-label={`Убрать ${label}`}
-          className="grid h-7 w-7 place-items-center rounded-full text-goldsoft/80 transition active:bg-gold/20"
+          className={cn("grid h-7 w-7 place-items-center rounded-full transition", removeBtnColors)}
         >
           <X size={15} />
         </button>
@@ -304,12 +336,12 @@ export function Chip({
       onClick={onClick}
       className={cn(
         "inline-flex h-9 items-center rounded-full border px-3.5 text-[13px] font-medium transition active:scale-95",
-        selected
-          ? "border-gold/50 bg-gold/15 text-goldsoft"
-          : "border-line bg-faint text-cream/80",
+        colors,
+        image && "pl-2.5",
         className
       )}
     >
+      {imgEl}
       {label}
     </button>
   );

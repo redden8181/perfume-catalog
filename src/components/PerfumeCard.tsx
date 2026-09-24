@@ -16,11 +16,10 @@ export function PerfumeCard({
   notesMap: Map<string, Note>;
   index: number;
 }) {
-  const noteNames = perfumeAllNoteIds(perfume)
-    .map((id) => notesMap.get(id)?.name)
-    .filter(Boolean)
-    .slice(0, 3)
-    .join(" · ");
+  const previewNotes = perfumeAllNoteIds(perfume)
+    .map((id) => notesMap.get(id))
+    .filter((n): n is Note => Boolean(n))
+    .slice(0, 3);
 
   return (
     <motion.div
@@ -77,8 +76,20 @@ export function PerfumeCard({
           <h3 className="mt-0.5 truncate font-display text-[16px] leading-snug text-cream">
             {perfume.name}
           </h3>
-          {noteNames && (
-            <p className="mt-1 truncate text-[11px] text-muted">{noteNames}</p>
+          {previewNotes.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-x-1 gap-y-0.5 truncate text-[11px]">
+              {previewNotes.map((n, i) => {
+                let color = "text-muted";
+                if (n.preference === "like") color = "text-like-text font-semibold";
+                if (n.preference === "dislike") color = "text-dislike-text font-semibold";
+                return (
+                  <span key={n.id} className={color}>
+                    {n.name}
+                    {i < previewNotes.length - 1 ? " ·" : ""}
+                  </span>
+                );
+              })}
+            </div>
           )}
           <p className="mt-1 text-[10px] uppercase tracking-wider text-muted/70">
             {[GENDER_SHORT[perfume.gender], perfume.year].filter(Boolean).join(" · ")}
