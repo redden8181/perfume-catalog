@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Star, X } from "lucide-react";
 import { cn } from "../utils/cn";
+import { useVisualViewportHeight } from "../hooks/useVisualViewport";
 
 /* ============================== Тосты ============================== */
 
@@ -66,6 +67,8 @@ interface SheetProps {
 }
 
 export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
+  const vpHeight = useVisualViewportHeight();
+
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -91,8 +94,13 @@ export function Sheet({ open, onClose, title, children, footer }: SheetProps) {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 32, stiffness: 340 }}
-            className="absolute inset-x-0 bottom-0 mx-auto flex max-h-[88dvh] w-full max-w-md flex-col rounded-t-[28px] border-t border-line bg-coal shadow-2xl shadow-black/30"
-            style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+            className="absolute inset-x-0 bottom-0 mx-auto flex w-full max-w-md flex-col rounded-t-[28px] border-t border-line bg-coal shadow-2xl shadow-black/30"
+            style={{
+              paddingBottom: "env(safe-area-inset-bottom)",
+              // При открытии iOS-клавиатуры visualViewport.height уменьшается —
+              // шторка автоматически подтягивается вверх, список остаётся виден.
+              maxHeight: vpHeight ? `${vpHeight * 0.92}px` : "88dvh",
+            }}
           >
             <div className="relative flex items-center justify-center px-5 pb-2 pt-3">
               <div className="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-faint-strong" />
