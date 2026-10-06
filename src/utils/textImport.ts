@@ -51,10 +51,17 @@ function translateNote(n: string): string {
   return TRAN[trimmed] ?? trimmed;
 }
 
+function splitNotes(s: string, isEn: boolean): string[] {
+  return s
+    .split(/,| и | and /)
+    .map((x) => (isEn ? translateNote(x) : x.trim().replace(/\.$/, "")))
+    .map((x) => x.trim())
+    .filter((x) => x.length > 1);
+}
+
 export function parsePastedText(rawText: string): ParsedPerfumeData {
-  // Убираем лишние пробелы и переносы
   const clean = rawText.replace(/\s+/g, " ").trim();
-  
+
   // 1. Пол
   let gender: Gender = "unisex";
   const lower = clean.toLowerCase();
@@ -63,17 +70,15 @@ export function parsePastedText(rawText: string): ParsedPerfumeData {
   else if (lower.includes("для мужчин") || lower.includes("for men")) gender = "male";
 
   // 2. Год
-  const yearMatch = clean.match(/(?:выпущен в|launched in|released in)\s*(\d{4})/i) 
-                 ?? clean.match(/\b(19[5-9]\d|20[0-2]\d)\b/);
+  const yearMatch = clean.match(/(?:выпущен в|launched in|released in)\s*(\d{4})/i)
+    ?? clean.match(/\b(19[5-9]\d|20[0-2]\d)\b/);
   const year = yearMatch ? parseInt(yearMatch[1], 10) : null;
 
-  // 3. Бренд и Название
+  // 3. Бренд и название
   let name = "";
   let brand = "";
-  
-  // Английский: "Aventus by Creed is a..."
+
   const enMatch = clean.match(/^(.+?)\s+by\s+(.+?)\s+is a/i);
-  // Русский: "Majnoon Azman — это аромат..."
   const ruMatch = clean.match(/^(.+?)\s+(?:—|-)\s*(?:это|аромат)/i);
 
   if (enMatch) {
@@ -81,42 +86,49 @@ export function parsePastedText(rawText: string): ParsedPerfumeData {
     brand = enMatch[2].trim();
   } else if (ruMatch) {
     const rawName = ruMatch[1].trim();
-    // Пытаемся отделить бренд от названия (обычно "Название Бренд")
     const parts = rawName.split(" ");
     if (parts.length >= 2) {
-      brand = parts[parts.length - 1]; // последнее слово — бренд
-      name = parts.slice(0, -1).join(" "); // всё остальное — название
+      brand = parts[parts.length - 1];
+      name = parts.slice(0, -1).join(" ");
     } else {
       name = rawName;
     }
   }
 
-  // 4. Ноты (Русский) — используем [а-яё] вместо \w
-  const topRu = clean.match(/[Вв]ерхн[а-яё]* нот[а-яё]*[:\s]+(.*?)(?=;\s*[Сс]редн|\.\s|$)/i);
-  const heartRu = clean.match(/[Сс]редн[а-яё]* нот[а-яё]*[:\s]+(.*?)(?=;\s*[Бб]азов|\.\s|$)/i);
-  const baseRu = clean.match(/[Бб]азов[а-яё]* нот[а-яё]*[:\s]+(.*?)(?=\.\s|$)/i);
+  // 4. Ноты по пирамидам
+  const topRu = clean.match(/[Вв]ерхн[а-яё]*\s+нот[а-яё]*[:\s]+(.*?)(?=;\s*[Сс]редн|\.\s|$)/i);
+  const heartRu = clean.match(/[Сс]редн[а-яё]*\s+нот[а-яё]*[:\s]+(.*?)(?=;\s*[Бб]азов|\.\s|$)/i);
+  const baseRu = clean.match(/[Бб]азов[а-яё]*\s+нот[а-яё]*[:\s]+(.*?)(?=\.\s|$)/i);
 
-  // 4. Ноты (Английский)
   const topEn = clean.match(/[Tt]op notes?\s+(?:are|is|:)\s*(.*?)(?=;\s*(?:middle|heart)|\.\s|$)/i);
   const heartEn = clean.match(/(?:[Mm]iddle|[Hh]eart) notes?\s+(?:are|is|:)\s*(.*?)(?=;\s*[Bb]ase|\.\s|$)/i);
   const baseEn = clean.match(/[Bb]ase notes?\s+(?:are|is|:)\s*(.*?)(?=\.\s|$)/i);
 
-  const split = (s: string, isEn: boolean) => 
-    s.split(/,| и | and /)
-     .map(x => isEn ? translateNote(x) : x.trim().replace(/\.$/, ""))
-     .filter(x => x.length > 1);
-
-  const notes = {
-    top: topRu ? split(topRu[1], false) : topEn ? split(topEn[1], true) : [],
-    heart: heartRu ? split(heartRu[1], false) : heartEn ? split(heartEn[1], true) : [],
-    base: baseRu ? split(baseRu[1], false) : baseEn ? split(baseEn[1], true) : [],
+  let notes = {
+    top: topRu ? splitNotes(topRu[1], false) : topEn ? splitNotes(topEn[1], true) : [],
+    heart: heartRu ? splitNotes(heartRu[1], false) : heartEn ? splitNotes(heartEn[1], true) : [],
+    base: baseRu ? splitNotes(baseRu[1], false) : baseEn ? splitNotes(baseEn[1], true) : [],
   };
 
-  // Описание
+  // 5. Если пирамиды нет, но есть просто «включает ноты / features» — кладём всё в базовые
+  const flatRu = clean.match(/(?:Композиция аромата включает ноты|Аромат включает ноты|Ноты)[:\s]+(.*?)(?=\.\s|$)/i);
+  const flatEn = clean.match(/(?:The fragrance features|Composition includes|Notes include)\s*(.*?)(?=\.\s|$)/i);
+
+  const total = notes.top.length + notes.heart.length + notes.base.length;
+  if (total === 0) {
+    if (flatRu) {
+      notes = { top: [], heart: [], base: splitNotes(flatRu[1], false) };
+    } else if (flatEn) {
+      notes = { top: [], heart: [], base: splitNotes(flatEn[1], true) };
+    }
+  }
+
+  // 6. Описание
   let description = clean
-    .replace(/[Вв]ерхн[а-яё]* нот[а-яё]*:.*$/is, "")
-    .replace(/[Тт]оп нот[а-яё]*:.*$/is, "")
+    .replace(/[Вв]ерхн[а-яё]*\s+нот[а-яё]*:.*$/is, "")
+    .replace(/[Тт]оп\s+нот[а-яё]*:.*$/is, "")
     .replace(/Top notes?.*/is, "")
+    .replace(/(?:Композиция аромата включает ноты|The fragrance features).*$/is, "")
     .replace(/The nose behind.*/i, "")
     .replace(/Парфюмер:.*/i, "")
     .trim();

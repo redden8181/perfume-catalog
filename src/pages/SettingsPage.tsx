@@ -238,7 +238,7 @@ export function SettingsPage() {
                 Приложение будет работать офлайн и обновляться автоматически.
               </p>
             </div>
-            <p>Ароматека · версия 1.6.2 · личный каталог парфюмерии</p>
+            <p>Ароматека · версия 1.6.3 · личный каталог парфюмерии</p>
             <GhostButton onClick={() => setChangelogOpen(true)} className="mt-2 h-11 border-line bg-card">
               <ScrollText size={16} />
               История версий
@@ -318,6 +318,15 @@ export function SettingsPage() {
 
       <Sheet open={changelogOpen} onClose={() => setChangelogOpen(false)} title="История версий">
         <div className="flex flex-col gap-6 pt-2 pb-6 px-1">
+          <div>
+            <h3 className="text-[16px] font-semibold text-goldsoft">Версия 1.6.3</h3>
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-[13px] leading-relaxed text-cream/85">
+              <li>Парсер теперь понимает тексты без пирамиды нот, например «Композиция аромата включает ноты…».</li>
+              <li>Такие ноты автоматически попадают в базовые ноты.</li>
+              <li>Исправлен импорт из буфера на iPhone: добавлен ручной fallback с автопрокруткой к полю.</li>
+              <li>Улучшено поведение текстового поля при открытии клавиатуры.</li>
+            </ul>
+          </div>
           <div>
             <h3 className="text-[16px] font-semibold text-goldsoft">Версия 1.6.2</h3>
             <ul className="mt-2 list-inside list-disc space-y-1.5 text-[13px] leading-relaxed text-cream/85">
