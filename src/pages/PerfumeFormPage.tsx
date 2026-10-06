@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronLeft, Heart, ImagePlus, RefreshCw, Trash2, X } from "lucide-react";
+import { ChevronLeft, Heart, ImagePlus, Scissors, RefreshCw, Trash2, X } from "lucide-react";
 import { catalog } from "../core/catalogStore";
 import { useCatalog } from "../hooks/useCatalog";
 import {
@@ -11,12 +11,17 @@ import {
   type PerfumeDraft,
 } from "../core/types";
 import { fileToDataUrl } from "../utils/image";
+import { getParseApiKey } from "../utils/integrations";
 import { NoteInput } from "../components/NoteInput";
+import { TextImportSheet } from "../components/TextImportSheet";
+import { PhotoSearchSheet } from "../components/PhotoSearchSheet";
+import type { ParsedPerfumeData } from "../utils/textImport";
 import {
   ConfirmSheet,
   DangerButton,
   FieldLabel,
   GoldButton,
+  GhostButton,
   Segmented,
   StarRating,
   Switch,
@@ -53,10 +58,14 @@ export function PerfumeFormPage() {
       : createEmptyDraft()
   );
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [photoSearchOpen, setPhotoSearchOpen] = useState(false);
+  const [photoSearchQuery, setPhotoSearchQuery] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const patch = (p: Partial<PerfumeDraft>) => setDraft((d) => ({ ...d, ...p }));
   const valid = draft.brand.trim().length > 0 && draft.name.trim().length > 0;
+  const hasParseKey = getParseApiKey().trim().length > 0;
 
   if (id && !existing) {
     navigate("/", { replace: true });
@@ -94,6 +103,41 @@ export function PerfumeFormPage() {
     return Number.isFinite(n) ? n : null;
   };
 
+  // Применяем данные из импорта текста
+  const handleImportApply = (data: ParsedPerfumeData) => {
+    const resolveNotes = (names: string[]) =>
+      names
+        .map((name) => catalog.addNote(name))
+        .filter((n): n is NonNullable<typeof n> => n !== null)
+        .map((n) => n.id);
+
+    const nextBrand = data.brand || draft.brand;
+    const nextName = data.name || draft.name;
+    const nextQuery = [nextBrand, nextName].filter(Boolean).join(" ").trim();
+
+    patch({
+      name: nextName,
+      brand: nextBrand,
+      gender: data.gender,
+      year: data.year,
+      description: data.description || draft.description,
+      notes: {
+        top: resolveNotes(data.notes.top),
+        heart: resolveNotes(data.notes.heart),
+        base: resolveNotes(data.notes.base),
+      },
+    });
+
+    if (nextQuery) {
+      setPhotoSearchQuery(nextQuery);
+      if (hasParseKey) {
+        window.setTimeout(() => setPhotoSearchOpen(true), 80);
+      } else {
+        toast("Текст импортирован. Для автоподбора промо-фото добавьте Parse API Key в Настройках → Интеграции");
+      }
+    }
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       {/* Верхняя панель */}
@@ -110,10 +154,57 @@ export function PerfumeFormPage() {
         </h1>
       </div>
 
+      {/* Кнопка импорта */}
+      {!existing && (
+        <div className="mt-4 grid gap-3">
+          <GhostButton onClick={() => setImportOpen(true)}>
+            <Scissors size={17} />
+            Распознать ноты из текста
+          </GhostButton>
+          <GhostButton
+            onClick={() => {
+              const query = [draft.brand, draft.name].filter(Boolean).join(" ").trim();
+              if (!query) {
+                toast("Сначала укажите бренд и название или импортируйте текст");
+                return;
+              }
+              setPhotoSearchQuery(query);
+              if (!hasParseKey) {
+                toast("Чтобы искать промо-фото, добавьте Parse API Key в Настройках → Интеграции");
+              }
+              setPhotoSearchOpen(true);
+            }}
+          >
+            <ImagePlus size={17} />
+            Подобрать промо-фото
+          </GhostButton>
+          <p className="text-center text-[11px] leading-relaxed text-muted px-4">
+            После импорта текста приложение может сразу предложить красивые каталожные фото флакона
+          </p>
+        </div>
+      )}
+
       <div className="mt-6 flex flex-col gap-6">
         {/* Фото */}
         <section>
-          <FieldLabel>Фото флакона</FieldLabel>
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <FieldLabel>Фото флакона</FieldLabel>
+            {!existing && draft.name.trim() && draft.brand.trim() && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPhotoSearchQuery([draft.brand, draft.name].filter(Boolean).join(" "));
+                  if (!hasParseKey) {
+                    toast("Чтобы искать промо-фото, добавьте Parse API Key в Настройках → Интеграции");
+                  }
+                  setPhotoSearchOpen(true);
+                }}
+                className="text-[11px] font-semibold uppercase tracking-wider text-gold underline-offset-2 active:underline"
+              >
+                Подобрать фото
+              </button>
+            )}
+          </div>
           <input
             ref={fileRef}
             type="file"
@@ -292,6 +383,19 @@ export function PerfumeFormPage() {
         }}
         title="Удалить аромат?"
         text="Действие нельзя отменить. Ноты останутся в базе."
+      />
+
+      <TextImportSheet
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onApply={handleImportApply}
+      />
+
+      <PhotoSearchSheet
+        open={photoSearchOpen}
+        onClose={() => setPhotoSearchOpen(false)}
+        initialQuery={photoSearchQuery || [draft.brand, draft.name].filter(Boolean).join(" ")}
+        onSelect={(image) => patch({ image })}
       />
     </motion.div>
   );

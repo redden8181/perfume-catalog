@@ -1,9 +1,12 @@
 import { useRef, useState, type ReactNode } from "react";
 import {
+  ChevronRight,
   Copy,
   Download,
+  ExternalLink,
   FileJson,
   Info,
+  KeyRound,
   Moon,
   Palette,
   ScrollText,
@@ -17,7 +20,8 @@ import { useBrands, useCatalog } from "../hooks/useCatalog";
 import { useTheme, type Theme } from "../state/ThemeContext";
 import { plural } from "../core/utils";
 import { copyToClipboard, exportTextFile, readFileAsText } from "../utils/download";
-import { FieldLabel, GhostButton, Segmented, Sheet, toast } from "../components/ui";
+import { getParseApiKey, setParseApiKey } from "../utils/integrations";
+import { FieldLabel, GhostButton, GoldButton, Segmented, Sheet, toast } from "../components/ui";
 import { cn } from "../utils/cn";
 
 function Section({
@@ -49,6 +53,8 @@ export function SettingsPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [importMode, setImportMode] = useState<"replace" | "merge">("merge");
   const [changelogOpen, setChangelogOpen] = useState(false);
+  const [instructionsOpen, setInstructionsOpen] = useState(false);
+  const [parseKey, setParseKey] = useState(() => getParseApiKey());
 
   const sizeKb = Math.max(1, Math.round(catalog.dataSize() / 1024));
 
@@ -115,6 +121,49 @@ export function SettingsPage() {
           <p className="mt-3 text-[11px] leading-relaxed text-muted/80">
             Выбор сохраняется на этом устройстве и применяется при каждом запуске.
           </p>
+        </Section>
+
+        {/* Интеграции */}
+        <Section icon={<KeyRound size={16} />} title="Интеграции">
+          <p className="mb-4 text-[13px] leading-relaxed text-muted">
+            Для поиска красивых промо-фото флаконов нужен бесплатный ключ. Он хранится
+            только на вашем телефоне.
+          </p>
+
+          <button
+            onClick={() => setInstructionsOpen(true)}
+            className="mb-4 flex w-full items-center justify-between rounded-2xl border border-gold/20 bg-gold/5 p-4 text-left transition active:scale-[0.98]"
+          >
+            <div className="flex items-center gap-3">
+              <div className="grid h-8 w-8 place-items-center rounded-full bg-gold/10 text-gold">
+                <Info size={16} />
+              </div>
+              <div>
+                <p className="text-[14px] font-semibold text-goldsoft">Как получить ключ?</p>
+                <p className="text-[11px] text-muted">Пошаговая инструкция на русском</p>
+              </div>
+            </div>
+            <ChevronRight size={18} className="text-gold/40" />
+          </button>
+
+          <FieldLabel>Parse API Key</FieldLabel>
+          <input
+            value={parseKey}
+            onChange={(e) => setParseKey(e.target.value)}
+            placeholder="Вставьте ваш X-API-Key"
+            className="h-[52px] w-full rounded-2xl border border-line bg-card px-4 text-[15px] text-cream outline-none placeholder:text-muted/50 focus:border-gold/40"
+          />
+          <div className="mt-4 flex gap-2">
+            <GoldButton
+              onClick={() => {
+                setParseApiKey(parseKey);
+                toast(parseKey.trim() ? "API key сохранён" : "API key очищен");
+              }}
+              className="h-11 flex-1"
+            >
+              Сохранить ключ
+            </GoldButton>
+          </div>
         </Section>
 
         {/* Статистика */}
@@ -189,7 +238,7 @@ export function SettingsPage() {
                 Приложение будет работать офлайн и обновляться автоматически.
               </p>
             </div>
-            <p>Ароматека · версия 1.3.0 · личный каталог парфюмерии</p>
+            <p>Ароматека · версия 1.6.2 · личный каталог парфюмерии</p>
             <GhostButton onClick={() => setChangelogOpen(true)} className="mt-2 h-11 border-line bg-card">
               <ScrollText size={16} />
               История версий
@@ -198,8 +247,128 @@ export function SettingsPage() {
         </Section>
       </div>
 
+      <Sheet open={instructionsOpen} onClose={() => setInstructionsOpen(false)} title="Как получить API ключ?">
+        <div className="flex flex-col gap-5 pt-2 pb-6 px-1">
+          <div className="space-y-4">
+            <div className="flex gap-4">
+              <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gold/20 text-gold text-[13px] font-bold">1</div>
+              <div className="space-y-2">
+                <p className="text-[14px] text-cream">Откройте сайт <b>parse.bot</b></p>
+                <a 
+                  href="https://parse.bot" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl bg-gold/10 px-4 py-2 text-[13px] font-medium text-goldsoft transition active:scale-95"
+                >
+                  <ExternalLink size={14} />
+                  Перейти на parse.bot
+                </a>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gold/20 text-gold text-[13px] font-bold">2</div>
+              <p className="text-[14px] text-cream leading-relaxed">
+                Нажмите синюю кнопку <b>"Sign Up"</b> (Регистрация) в верхнем правом углу. 
+                Можно быстро войти через Google.
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gold/20 text-gold text-[13px] font-bold">3</div>
+              <p className="text-[14px] text-cream leading-relaxed">
+                После входа вы сразу попадете в <b>Dashboard</b> (Панель управления).
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gold/20 text-gold text-[13px] font-bold">4</div>
+              <p className="text-[14px] text-cream leading-relaxed">
+                Найдите блок с заголовком <b>"Your API Key"</b> или вкладку <b>"API Keys"</b>. 
+                Там будет длинная строка символов.
+              </p>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gold/20 text-gold text-[13px] font-bold">5</div>
+              <p className="text-[14px] text-cream leading-relaxed">
+                Нажмите на иконку <b>Copy</b> (квадратики) рядом с ключом.
+              </p>
+            </div>
+
+            <div className="flex gap-4 border-t border-line pt-4">
+              <div className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-gold text-ongold text-[13px] font-bold">6</div>
+              <p className="text-[14px] text-cream leading-relaxed">
+                Вернитесь в <b>Ароматеку</b> и вставьте ключ в поле <b>Parse API Key</b> выше. 
+                Не забудьте нажать кнопку <b>"Сохранить ключ"</b>.
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-line bg-card p-4">
+            <p className="text-[12px] leading-relaxed text-muted/80">
+              <b>Важно:</b> Бесплатного тарифа на parse.bot (200 запросов в месяц) с запасом хватает 
+              для личной коллекции. Платить ничего не нужно.
+            </p>
+          </div>
+          
+          <GoldButton onClick={() => setInstructionsOpen(false)}>Понятно</GoldButton>
+        </div>
+      </Sheet>
+
       <Sheet open={changelogOpen} onClose={() => setChangelogOpen(false)} title="История версий">
         <div className="flex flex-col gap-6 pt-2 pb-6 px-1">
+          <div>
+            <h3 className="text-[16px] font-semibold text-goldsoft">Версия 1.6.2</h3>
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-[13px] leading-relaxed text-cream/85">
+              <li>Добавлена пошаговая русская инструкция по получению Parse API Key.</li>
+              <li>Улучшен интерфейс раздела интеграций.</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-[16px] font-semibold text-goldsoft">Версия 1.6.1</h3>
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-[13px] leading-relaxed text-cream/85">
+              <li>Поиск промо-фото теперь предлагается заметно и явно.</li>
+              <li>После импорта текста приложение само предлагает подобрать фото.</li>
+              <li>Шторка поиска фото запускает поиск автоматически при открытии.</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-[16px] font-semibold text-goldsoft">Версия 1.6.0</h3>
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-[13px] leading-relaxed text-cream/85">
+              <li>Добавлен поиск промо-фото флаконов по названию и бренду.</li>
+              <li>Можно выбрать один из нескольких каталожных вариантов.</li>
+              <li>Добавлен раздел «Интеграции» для бесплатного Parse API key.</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-[16px] font-semibold text-goldsoft">Версия 1.5.2</h3>
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-[13px] leading-relaxed text-cream/85">
+              <li>Добавлена кнопка «Вставить из буфера» в шторку импорта — заполнение в один клик.</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-[16px] font-semibold text-goldsoft">Версия 1.5.1</h3>
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-[13px] leading-relaxed text-cream/85">
+              <li>Исправлено распознавание русских нот в описании парфюма.</li>
+              <li>Улучшено разделение Бренда и Названия для русскоязычных текстов.</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-[16px] font-semibold text-goldsoft">Версия 1.5.0</h3>
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-[13px] leading-relaxed text-cream/85">
+              <li>Полностью переработан механизм импорта (в связи с блокировками сайтов).</li>
+              <li>Теперь используется "Умная вставка текста": скопируйте описание со страницы аромата (с нотами), и приложение само вытащит из него ноты, год, пол и название.</li>
+              <li>Это работает моментально, офлайн и не блокируется защитой сайтов.</li>
+            </ul>
+          </div>
+          <div>
+            <h3 className="text-[16px] font-semibold text-goldsoft">Версия 1.4.0</h3>
+            <ul className="mt-2 list-inside list-disc space-y-1.5 text-[13px] leading-relaxed text-cream/85">
+              <li>Экспериментальный импорт парфюма по ссылке.</li>
+              <li>Словарь перевода нот с английского на русский (90+ нот).</li>
+            </ul>
+          </div>
           <div>
             <h3 className="text-[16px] font-semibold text-goldsoft">Версия 1.3.0</h3>
             <ul className="mt-2 list-inside list-disc space-y-1.5 text-[13px] leading-relaxed text-cream/85">
